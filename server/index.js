@@ -8,6 +8,16 @@ const io = new Server(server, {
   cors: { origin: ["http://localhost:3000"], methods: ["GET", "POST"] },
 });
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve React build
+app.use(express.static(path.join(__dirname, "../client/build")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/build", "index.html"));
+});
+
 let board = Array(9).fill(null);
 let xIsNext = true; // true => X's turn, false => O's turn
 let startingPlayer = "X";
