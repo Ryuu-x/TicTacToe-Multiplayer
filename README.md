@@ -17,7 +17,7 @@ Players can join, play against each other, or simply spectate the game.
 ---
 
 ## 🖼️ Demo (Screenshots)
-> *(Add screenshots/gifs of your game UI here once you push to GitHub!)* 
+![Game Screenshot](/client/public/GameSS.png)
 
 ---
 
