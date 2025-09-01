@@ -1,0 +1,80 @@
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #1a1a2e;
+  color: #fff;
+  height: 100vh;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+.game {
+  text-align: center;
+}
+
+.title {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.status {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #ffd369;
+  font-weight: bold;
+}
+
+.player-count {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  background: #0f3460;
+  padding: 8px 16px;
+  border-radius: 8px;
+  display: inline-block;
+  color: #00ffcc;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, 120px);
+  grid-template-rows: repeat(3, 120px);
+  gap: 10px;
+  justify-content: center;
+}
+
+.square {
+  width: 120px;
+  height: 120px;
+  font-size: 2.5rem;
+  font-weight: bold;
+  background: #222831;
+  color: #ffd369;
+  border: 2px solid #ffd369;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.square:hover {
+  background: #393e46;
+}
+
+.reset-btn {
+  margin-top: 20px;
+  padding: 12px 24px;
+  background-color: #ff4d4f;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.reset-btn:hover {
+  background-color: #d9363e;
+}
