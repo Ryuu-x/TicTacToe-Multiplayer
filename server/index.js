@@ -1,45 +1,38 @@
 import express from "express";
+import { createServer } from "http";
 import { Server } from "socket.io";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
-const server = http.createServer(app);
+const server = createServer(app);
 const io = new Server(server, {
   cors: { origin: ["http://localhost:3000"], methods: ["GET", "POST"] },
 });
 
+// Fix __dirname for ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Serve React build
+// Serve React build (when deployed)
 app.use(express.static(path.join(__dirname, "../client/build")));
 
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../client/build", "index.html"));
 });
 
+// ===== Game State =====
 let board = Array(9).fill(null);
 let xIsNext = true; // true => X's turn, false => O's turn
 let startingPlayer = "X";
 let xPlayerId = null;
 let oPlayerId = null;
 
-let players = [];
 const spectators = new Set();
 
-io.on("connection", (socket) => {
-  
-  // Emit player count to all clients
-  io.emit("playerCount", io.engine.clientsCount);
-
-  socket.on("disconnect", () => {
-    // remove from players/spectators logic
-    io.emit("playerCount", io.engine.clientsCount);
-  });
-});
-
-
+// ===== Helper Functions =====
 function emitState() {
-  io.emit("gameState", board, xIsNext); // <-- matches the client listener
+  io.emit("gameState", board, xIsNext);
 }
 
 function roleOf(socketId) {
@@ -59,26 +52,30 @@ function assignRole(socket) {
   } else {
     spectators.add(socket.id);
   }
-  socket.emit("playerRole", role); 
+  socket.emit("playerRole", role);
   socket.emit("gameState", board, xIsNext);
   console.log(`Assigned ${role} to ${socket.id}`);
 }
 
+// ===== Socket Logic =====
 io.on("connection", (socket) => {
   assignRole(socket);
 
+  // Broadcast player count
+  io.emit("playerCount", io.engine.clientsCount);
+
   socket.on("makeMove", (index) => {
     const role = roleOf(socket.id);
-    if (role === "spectator") return;     // spectators can't move
-    if ((xIsNext && role !== "X") || (!xIsNext && role !== "O")) return; // turn check
-    if (board[index] !== null) return;          // occupied cell
+    if (role === "spectator") return;
+    if ((xIsNext && role !== "X") || (!xIsNext && role !== "O")) return;
+    if (board[index] !== null) return;
 
     board[index] = role;
     xIsNext = !xIsNext;
     emitState();
   });
 
-   socket.on("reset", () => {
+  socket.on("reset", () => {
     const role = roleOf(socket.id);
     if (role === "spectator") {
       console.log(`Spectator ${socket.id} tried to reset — ignored`);
@@ -97,7 +94,6 @@ io.on("connection", (socket) => {
     const role = roleOf(socket.id);
     if (role === "X") {
       xPlayerId = null;
-      // promote first spectator to X if any
       const iter = spectators.values();
       const next = iter.next();
       if (!next.done) {
@@ -108,7 +104,6 @@ io.on("connection", (socket) => {
       }
     } else if (role === "O") {
       oPlayerId = null;
-      // promote first spectator to O if any
       const iter = spectators.values();
       const next = iter.next();
       if (!next.done) {
@@ -120,8 +115,11 @@ io.on("connection", (socket) => {
     } else {
       spectators.delete(socket.id);
     }
+
+    io.emit("playerCount", io.engine.clientsCount);
   });
 });
 
+// ===== Server Start =====
 const PORT = process.env.PORT || 4000;
-server.listen(PORT, () => console.log(`Server on http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
