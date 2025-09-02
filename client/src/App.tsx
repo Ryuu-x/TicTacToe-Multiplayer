@@ -2,7 +2,14 @@ import React, { useState, useEffect } from "react";
 import io, { Socket } from "socket.io-client";
 import "./App.css";
 
-const socket: Socket = io("http://localhost:4000");
+const URL =
+  process.env.NODE_ENV === "production"
+    ? undefined // let it connect to same origin
+    : "http://localhost:4000";
+
+const socket: Socket = io(URL || "/", {
+  transports: ["websocket", "polling"],
+});
 
 type Player = "X" | "O" | null;
 

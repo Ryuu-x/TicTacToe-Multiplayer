@@ -7,7 +7,12 @@ import { fileURLToPath } from "url";
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
-  cors: { origin: ["http://localhost:3000"], methods: ["GET", "POST"] },
+  cors: {
+    origin: process.env.NODE_ENV === "production"
+      ? "*" // in Render, frontend is served from same host, so "*" is fine
+      : "http://localhost:3000",
+    methods: ["GET", "POST"],
+  },
 });
 
 // Fix __dirname for ESM
