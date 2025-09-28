@@ -26,6 +26,7 @@ body {
 }
 
 .player-count {
+  margin-left: 10px;
   margin-bottom: 1rem;
   font-size: 1rem;
   background: #0f3460;
@@ -78,3 +79,5 @@ body {
 .reset-btn:hover {
   background-color: #d9363e;
 }
+
+

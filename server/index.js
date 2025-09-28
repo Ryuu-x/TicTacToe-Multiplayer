@@ -1,41 +1,50 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import path from "path";
 import { fileURLToPath } from "url";
+import { connectDB } from "./db.js";
+import authRoutes from "./routes/auth.js";
+import jwt from "jsonwebtoken";
+import cors from "cors";
+
+connectDB();
 
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.NODE_ENV === "production"
-      ? "*" // in Render, frontend is served from same host, so "*" is fine
-      : "http://localhost:3000",
+    origin: "http://localhost:3000",
     methods: ["GET", "POST"],
   },
 });
 
-// Fix __dirname for ESM
+app.use(cors({
+  origin: "http://localhost:3000",
+  methods: ["GET", "POST"],
+  credentials: true,
+}));
+app.use(express.json());
+app.use("/api/auth", authRoutes);
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Serve React build (when deployed)
 app.use(express.static(path.join(__dirname, "../client/build")));
-
 app.get("/*", (req, res) => {
   res.sendFile(path.join(__dirname, "../client/build", "index.html"));
 });
 
-// ===== Game State =====
 let board = Array(9).fill(null);
-let xIsNext = true; // true => X's turn, false => O's turn
+let xIsNext = true;
 let startingPlayer = "X";
 let xPlayerId = null;
 let oPlayerId = null;
-
 const spectators = new Set();
+const players = new Map();
 
-// ===== Helper Functions =====
 function emitState() {
   io.emit("gameState", board, xIsNext);
 }
@@ -48,26 +57,51 @@ function roleOf(socketId) {
 
 function assignRole(socket) {
   let role = "spectator";
+
   if (!xPlayerId) {
     xPlayerId = socket.id;
     role = "X";
+    players.set(socket.userId, "X");
   } else if (!oPlayerId) {
     oPlayerId = socket.id;
     role = "O";
+    players.set(socket.userId, "O");
   } else {
     spectators.add(socket.id);
   }
+
   socket.emit("playerRole", role);
   socket.emit("gameState", board, xIsNext);
-  console.log(`Assigned ${role} to ${socket.id}`);
+  console.log(`Assigned ${role} to ${socket.id} (userId=${socket.userId})`);
 }
 
-// ===== Socket Logic =====
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  console.log("Token received in socket auth:", token);
+  console.log("Verifying JWT with secret:", process.env.JWT_SECRET);
+
+  if (!token) return next(new Error("Authentication error"));
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      console.log("JWT verification failed:", err.message);
+      return next(new Error("Authentication error"));
+    }
+
+    console.log("JWT verified:", decoded);
+    socket.userId = decoded.userId;
+    next();
+  });
+});
+
+
 io.on("connection", (socket) => {
   assignRole(socket);
+  const playerCount = [xPlayerId, oPlayerId].filter(Boolean).length;
+  const spectatorCount = spectators.size;
 
-  // Broadcast player count
-  io.emit("playerCount", io.engine.clientsCount);
+  io.emit("playerCountInfo", { playerCount, spectatorCount });
+
 
   socket.on("makeMove", (index) => {
     const role = roleOf(socket.id);
@@ -82,12 +116,8 @@ io.on("connection", (socket) => {
 
   socket.on("reset", () => {
     const role = roleOf(socket.id);
-    if (role === "spectator") {
-      console.log(`Spectator ${socket.id} tried to reset — ignored`);
-      return;
-    }
+    if (role === "spectator") return;
 
-    // Reset game
     board = Array(9).fill(null);
     startingPlayer = startingPlayer === "X" ? "O" : "X";
     xIsNext = startingPlayer === "X";
@@ -121,10 +151,9 @@ io.on("connection", (socket) => {
       spectators.delete(socket.id);
     }
 
-    io.emit("playerCount", io.engine.clientsCount);
+    io.emit("playerCount", io.engine.clientsCount - spectators.size);
   });
 });
 
-// ===== Server Start =====
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
