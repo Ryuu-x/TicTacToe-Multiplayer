@@ -11,13 +11,20 @@ interface RoomInfo {
 }
 
 const Lobby: React.FC = () => {
-    const { socket, connected } = useSocket(); // Use shared socket
+    const { socket, connected, clearSocket } = useSocket(); // Use shared socket
     const [rooms, setRooms] = useState<RoomInfo[]>([]);
     const [joinRoomId, setJoinRoomId] = useState("");
     const [error, setError] = useState("");
     const navigate = useNavigate();
 
     useEffect(() => {
+        // Auth check
+        const token = localStorage.getItem("token");
+        if (!token) {
+            navigate("/login");
+            return;
+        }
+
         if (!socket) return;
 
         // Reset any previous listeners to avoid duplicates
@@ -72,8 +79,7 @@ const Lobby: React.FC = () => {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("username");
+        clearSocket();
         navigate("/login");
     };
 
@@ -133,14 +139,24 @@ const Lobby: React.FC = () => {
                     <div className="room-cards">
                         {rooms.map((room) => (
                             <div key={room.id} className="room-card">
-                                <div className="room-id">Room: {room.id}</div>
+                                <div className="room-id">
+                                    <span className="label">Room ID</span>
+                                    <span className="value">{room.id}</span>
+                                </div>
                                 <div className="room-info">
-                                    <span>Players: {room.playerCount}/2</span>
-                                    <span>Spectators: {room.spectatorCount}</span>
+                                    <div>
+                                        <span>Players:</span>
+                                        <span className="stat-value">{room.playerCount}/2</span>
+                                    </div>
+                                    <div>
+                                        <span>Spectators:</span>
+                                        <span className="stat-value">{room.spectatorCount}</span>
+                                    </div>
                                 </div>
                                 <button
                                     className={`lobby-btn ${room.hasSpace ? "primary" : ""}`}
                                     onClick={() => handleJoinRoom(room.id)}
+                                    style={{ minWidth: '120px' }}
                                 >
                                     {room.hasSpace ? "Join" : "Spectate"}
                                 </button>

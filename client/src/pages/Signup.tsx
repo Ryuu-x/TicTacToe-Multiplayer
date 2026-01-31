@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSocket } from "../context/SocketContext";
 import "../Auth.css";
 
 const Signup: React.FC = () => {
@@ -7,6 +8,7 @@ const Signup: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const { refreshSocket } = useSocket();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +23,7 @@ const Signup: React.FC = () => {
     if (res.ok) {
       localStorage.setItem("token", data.token);
       localStorage.setItem("username", data.username);
+      refreshSocket();
 
       console.log("Signed up successfully");
       navigate("/lobby");

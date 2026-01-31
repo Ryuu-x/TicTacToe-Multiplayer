@@ -81,6 +81,15 @@ class Room {
     }
 
     /**
+     * Internal reset logic
+     */
+    _resetGame() {
+        this.board = Array(9).fill(null);
+        this.startingPlayer = this.startingPlayer === "X" ? "O" : "X";
+        this.xIsNext = this.startingPlayer === "X";
+    }
+
+    /**
      * Reset the game board
      * Only players (not spectators) can reset
      */
@@ -88,9 +97,7 @@ class Room {
         const role = this.roleOf(socketId);
         if (role === "spectator" || role === null) return false;
 
-        this.board = Array(9).fill(null);
-        this.startingPlayer = this.startingPlayer === "X" ? "O" : "X";
-        this.xIsNext = this.startingPlayer === "X";
+        this._resetGame();
         return true;
     }
 
@@ -114,7 +121,8 @@ class Room {
                 promotedSocketId = next.value;
                 this.spectators.delete(promotedSocketId);
                 this.xPlayerId = promotedSocketId;
-                // Note: Index.js will need to update userId/name after promotion
+                // Game should restart if a new player joins mid-match
+                this._resetGame();
             }
         } else if (role === "O") {
             this.oPlayerId = null;
@@ -127,6 +135,8 @@ class Room {
                 promotedSocketId = next.value;
                 this.spectators.delete(promotedSocketId);
                 this.oPlayerId = promotedSocketId;
+                // Game should restart if a new player joins mid-match
+                this._resetGame();
             }
         } else if (role === "spectator") {
             this.spectators.delete(socketId);

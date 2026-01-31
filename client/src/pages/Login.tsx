@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSocket } from "../context/SocketContext";
 import "../Auth.css";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const { refreshSocket } = useSocket();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,6 +22,7 @@ const Login: React.FC = () => {
     if (res.ok) {
       localStorage.setItem("token", data.token);
       localStorage.setItem("username", data.username);
+      refreshSocket();
       navigate("/lobby");
     } else {
       alert(data.message || "Login failed");

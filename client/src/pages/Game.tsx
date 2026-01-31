@@ -36,6 +36,13 @@ const Game: React.FC = () => {
   const isBoardFull = !squares.includes(null);
 
   useEffect(() => {
+    // Auth check
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     if (!socket || !roomId) {
       if (!roomId) navigate("/lobby");
       return;
@@ -168,12 +175,12 @@ const Game: React.FC = () => {
       </div>
 
       <div className="player-info-container">
-        <div className={`player-box ${xIsNext ? 'active' : ''}`}>
+        <div className={`player-box ${xIsNext ? 'active' : ''} ${player === 'X' ? 'is-me' : ''}`}>
           <div className="player-symbol">X</div>
           <div className="player-name">{xName || (player === 'X' ? 'You' : 'Waiting...')}</div>
         </div>
         <div className="vs-divider">VS</div>
-        <div className={`player-box ${!xIsNext ? 'active' : ''}`}>
+        <div className={`player-box ${!xIsNext ? 'active' : ''} ${player === 'O' ? 'is-me' : ''}`}>
           <div className="player-symbol">O</div>
           <div className="player-name">{oName || (player === 'O' ? 'You' : 'Waiting...')}</div>
         </div>
