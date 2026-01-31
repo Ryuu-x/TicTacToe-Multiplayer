@@ -68,7 +68,6 @@ const Game: React.FC = () => {
     });
 
     socket.on("playerRole", (role: Player | "spectator") => {
-      console.log("Role assigned:", role);
       setPlayer(role);
     });
 

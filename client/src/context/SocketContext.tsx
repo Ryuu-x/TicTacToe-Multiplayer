@@ -59,7 +59,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
             return;
         }
 
-        console.log("Initializing socket with URL:", URL || "/", "Token presence:", !!token);
         const newSocket = io(URL || "/", {
             transports: ["websocket", "polling"],
             auth: { token, username },
@@ -69,12 +68,10 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
         setConnected(newSocket.connected);
 
         newSocket.on("connect", () => {
-            console.log("Socket connected successfully:", newSocket.id);
             setConnected(true);
         });
 
         newSocket.on("disconnect", (reason) => {
-            console.log("Socket disconnected. Reason:", reason);
             setConnected(false);
         });
 
