@@ -19,7 +19,8 @@ const Login: React.FC = () => {
 
     if (res.ok) {
       localStorage.setItem("token", data.token);
-      navigate("/game");
+      localStorage.setItem("username", data.username);
+      navigate("/lobby");
     } else {
       alert(data.message || "Login failed");
     }

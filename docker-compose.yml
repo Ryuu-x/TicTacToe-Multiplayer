@@ -1,0 +1,51 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: tictactoe-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - tictactoe-network
+
+  app:
+    build: .
+    container_name: tictactoe-app
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - MONGO_URI=mongodb://mongodb:27017/tictactoe
+      - JWT_SECRET=dev-secret-key-change-in-production
+      - CORS_ORIGIN=http://localhost:3000
+    depends_on:
+      - mongodb
+    networks:
+      - tictactoe-network
+
+  # Development client (optional - for hot reload)
+  client-dev:
+    image: node:20-alpine
+    container_name: tictactoe-client-dev
+    working_dir: /app
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:4000
+    command: sh -c "npm install && npm start"
+    networks:
+      - tictactoe-network
+    profiles:
+      - dev
+
+volumes:
+  mongodb_data:
+
+
+networks:
+  tictactoe-network:
+    driver: bridge

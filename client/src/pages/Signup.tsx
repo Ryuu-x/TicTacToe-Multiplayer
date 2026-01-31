@@ -20,10 +20,11 @@ const Signup: React.FC = () => {
 
     if (res.ok) {
       localStorage.setItem("token", data.token);
+      localStorage.setItem("username", data.username);
 
-    console.log("Signed up successfully");      navigate("/login");
+      console.log("Signed up successfully");
+      navigate("/lobby");
     } else {
-      const data = await res.json();
       alert(data.message || "Signup failed");
     }
   };

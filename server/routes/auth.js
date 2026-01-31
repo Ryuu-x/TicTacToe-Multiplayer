@@ -1,5 +1,5 @@
 import express from "express";
-import User from "../models/User.js";
+import User from "../models/user.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -32,7 +32,7 @@ router.post("/signup", async (req, res) => {
     { expiresIn: "1h" }
   );
 
-  res.json({ token });
+  res.json({ token, username: user.username });
 });
 
 // Login Route
@@ -54,7 +54,7 @@ router.post("/login", async (req, res) => {
     { expiresIn: "1h" }
   );
 
-  res.json({ token });
+  res.json({ token, username: user.username });
 });
 
 export default router;
