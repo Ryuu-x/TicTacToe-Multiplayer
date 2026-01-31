@@ -1,11 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import io, { Socket } from "socket.io-client";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../constants";
 
-const URL =
-    process.env.NODE_ENV === "production"
-        ? undefined
-        : "http://localhost:4000";
+const URL = API_BASE_URL;
 
 interface SocketContextType {
     socket: Socket | null;
